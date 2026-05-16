@@ -6,6 +6,22 @@ A Flask web app that wires together a trained ranker (gradient boosting), a cons
 
 ---
 
+## Supporting materials (datasets, notebooks, model files)
+
+All the raw data, training notebooks, intermediate CSVs, validation samples, and full-size model files live in this Google Drive folder:
+
+**https://drive.google.com/drive/folders/1Ho2et8wu3nR4I17sfj3l3UVdwjeiJ1QZ?usp=sharing**
+
+What's in there:
+- The full training and evaluation notebooks (data merge, feature engineering, model training, evaluation, ablations, planner, safety filter)
+- The raw Sephora + Ulta product CSVs and the 1.1 M Sephora reviews
+- All intermediate result CSVs (evaluation, ablation, fairness, learning curve, planner comparisons, etc.)
+- The 302 MB `rf_model.pkl` that's too large for GitHub
+
+The app itself doesn't need any of this — everything required to *run* the app is already in this repo. The Drive link is for graders, reviewers, or anyone who wants to inspect the underlying data, retrain models, or rerun the experiments.
+
+---
+
 ## First-Time Setup
 
 ### Step 1 — Python 3.10+
