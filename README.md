@@ -164,7 +164,7 @@ Another process is on port 5000. Kill it or change the port in `app.py`.
 **`FileNotFoundError: Catalog missing`**
 The `data/merged_products_with_personalization.csv` or `models/gb_model.pkl` is missing. Both ship in the git repo, so a fresh `git clone` should have them. If they're gone, re-clone or pull them from the Drive folder linked in Step 4.
 
-**Chat returns "⚠ Claude API error: AuthenticationError"**
+**Chat returns "Claude API error: AuthenticationError"**
 Your `.env` is missing the API key or the key is wrong. Check `.env` exists in the project root and has `ANTHROPIC_API_KEY=sk-ant-...`.
 
 **Page loads but routine generation fails**
