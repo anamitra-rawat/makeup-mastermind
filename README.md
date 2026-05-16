@@ -35,14 +35,18 @@ The chatbot uses `claude-sonnet-4-6` (configurable). You need an Anthropic API k
 
 `.env` is in `.gitignore` — it will **never** be committed.
 
-### Step 4 — (One-time) Copy the Random Forest model from datamain
-`rf_model.pkl` is 302 MB — over GitHub's 100 MB hard file limit, so it's gitignored. The app runs without it (the Random Forest model card just falls back to Gradient Boosting). To enable the actual RF model locally:
+### Step 4 — (One-time) Download the Random Forest model
+`rf_model.pkl` is 302 MB — over GitHub's 100 MB hard file limit, so it's **not in the repo**. The app runs without it (the Random Forest model card just silently falls back to Gradient Boosting). To enable the actual RF model:
 
-```bash
-copy "..\datamain\data-20260516T051757Z-3-001\data\rf_model.pkl" models\
-```
+1. Open this Google Drive folder:
+   **https://drive.google.com/drive/folders/1Ho2et8wu3nR4I17sfj3l3UVdwjeiJ1QZ?usp=sharing**
+2. Download **`rf_model.pkl`**
+3. Move it into the project's `models/` folder so the path is:
+   ```
+   makeup-mastermind/models/rf_model.pkl
+   ```
 
-You only need to do this once per machine. If you skip it, the backend logs `✗ random_forest → NOT FOUND` at startup and silently routes Random Forest requests to Gradient Boosting.
+You only need to do this once per machine. If you skip it, the backend logs `✗ random_forest → NOT FOUND` at startup and silently routes Random Forest requests to Gradient Boosting — everything else works.
 
 ### Step 5 — Start the server
 ```bash
@@ -92,7 +96,8 @@ makeup-mastermind/
 │   ├── gb_model.pkl        ← trained Gradient Boosting ranker — 12 MB, in git
 │   ├── ridge_model.pkl     ← trained Ridge baseline           — 1 KB, in git
 │   └── rf_model.pkl        ← trained Random Forest            — 302 MB, NOT in git
-│                              (over GitHub's 100 MB file limit; copy from datamain manually)
+│                              (over GitHub's 100 MB file limit — download from
+│                               the Drive link in Step 4 of First-Time Setup)
 ├── .env.example            ← copy to .env and add your API key
 ├── .gitignore              ← .env is excluded
 ├── requirements.txt
@@ -141,7 +146,7 @@ Run from the project root, not from inside `backend/`.
 Another process is on port 5000. Kill it or change the port in `app.py`.
 
 **`FileNotFoundError: Catalog missing`**
-The `data/merged_products_with_personalization.csv` or `models/gb_model.pkl` is missing — copy from `datamain/data-.../data/` if needed.
+The `data/merged_products_with_personalization.csv` or `models/gb_model.pkl` is missing. Both ship in the git repo, so a fresh `git clone` should have them. If they're gone, re-clone or pull them from the Drive folder linked in Step 4.
 
 **Chat returns "⚠ Claude API error: AuthenticationError"**
 Your `.env` is missing the API key or the key is wrong. Check `.env` exists in the project root and has `ANTHROPIC_API_KEY=sk-ant-...`.
