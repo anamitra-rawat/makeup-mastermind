@@ -10,7 +10,7 @@ A Flask web app that wires together a trained ranker (gradient boosting), a cons
 
 All the raw data, training notebooks, intermediate CSVs, validation samples, and full-size model files live in this Google Drive folder:
 
-**https://drive.google.com/drive/folders/1Ho2et8wu3nR4I17sfj3l3UVdwjeiJ1QZ?usp=sharing**
+**https://drive.google.com/file/d/1CPG4HBVDG_PDmhm9p0yCWN7GbikH4JWs/view?usp=sharing**
 
 What's in there:
 - The full training and evaluation notebooks (data merge, feature engineering, model training, evaluation, ablations, planner, safety filter)
@@ -55,7 +55,7 @@ The chatbot uses `claude-sonnet-4-6` (configurable). You need an Anthropic API k
 `rf_model.pkl` is 302 MB — over GitHub's 100 MB hard file limit, so it's **not in the repo**. The app runs without it (the Random Forest model card just silently falls back to Gradient Boosting). To enable the actual RF model:
 
 1. Open this Google Drive folder:
-   **https://drive.google.com/drive/folders/1Ho2et8wu3nR4I17sfj3l3UVdwjeiJ1QZ?usp=sharing**
+   **https://drive.google.com/file/d/1CPG4HBVDG_PDmhm9p0yCWN7GbikH4JWs/view?usp=sharing**
 2. Download **`rf_model.pkl`**
 3. Move it into the project's `models/` folder so the path is:
    ```
