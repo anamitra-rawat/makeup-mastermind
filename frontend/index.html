@@ -194,7 +194,7 @@ input[type=range]{width:100%;accent-color:var(--rose)}
   <div class="onboard-card">
     <div class="onboard-head">
       <div class="onboard-title">Welcome to Makeup <em>Mastermind</em></div>
-      <div class="onboard-sub">A 3-step survey to build your profile. Your answers drive every ranker and routine the system produces.</div>
+      <div class="onboard-sub">Three quick questions to build your beauty profile. We'll use them to pick a routine just for you.</div>
       <div class="onboard-progress" id="onboard-progress">
         <div class="op-step active" data-step="1">1</div>
         <div class="op-line" data-line="1-2"></div>
@@ -207,8 +207,8 @@ input[type=range]{width:100%;accent-color:var(--rose)}
     <div class="onboard-body">
       <!-- Step 1: Skin -->
       <div class="onboard-step active" data-step="1">
-        <h3>About Your Skin</h3>
-        <div class="onboard-help">We use these fields to rank by <em>demographic-matched ratings</em> — the average rating from Sephora reviewers who share your skin type and tone (≈1.1 M reviews, real-rating coverage flagged via <code>is_real</code>). Two things to know:<br>• <strong>sensitive → dry proxy.</strong> Sensitive-skin reviewer counts are too sparse, so the feature pipeline maps sensitive to the dry rating column.<br>• <strong>5 user tones, 9 reviewer tones.</strong> Sephora reviewers tag in 9 bins (adds <em>fair_light, light_medium, medium_tan, dark</em>); we collapse to 5 here because that's the user-facing space the 800-user training set was sampled from. The in-between bins still live in the product features — they just aren't directly queried by your input.</div>
+        <h3>Tell us about your skin</h3>
+        <div class="onboard-help">We'll prioritize products rated highly by reviewers who share your skin type and tone (from over 1 million reviews).</div>
 
         <div class="field">
           <label>Skin Type</label>
@@ -235,11 +235,11 @@ input[type=range]{width:100%;accent-color:var(--rose)}
 
       <!-- Step 2: Style + Budget -->
       <div class="onboard-step" data-step="2">
-        <h3>Your Style &amp; Budget</h3>
-        <div class="onboard-help">Style determines which routine slots get filled — a no-makeup routine has ~5 slots, a dramatic look has ~11. Budget is a hard constraint: products that exceed it are excluded by the planner.</div>
+        <h3>Your style &amp; budget</h3>
+        <div class="onboard-help">Pick the look you want and how much you'd like to spend. A "no makeup" routine is just skincare basics (~5 products); "dramatic" adds full eye and lip products (~11 products).</div>
 
         <div class="field">
-          <label>Makeup Style</label>
+          <label>Your style</label>
           <select id="ob_style">
             <option value="natural">Natural — light coverage, dewy, neutral colors</option>
             <option value="glam">Glam — full coverage, shimmer, bold lips</option>
@@ -250,7 +250,7 @@ input[type=range]{width:100%;accent-color:var(--rose)}
         </div>
 
         <div class="field">
-          <label>Total Routine Budget</label>
+          <label>Total budget</label>
           <div class="chips" id="ob_budget_chips">
             <div class="chip budget-chip" data-v="30">$30</div>
             <div class="chip budget-chip" data-v="50">$50</div>
@@ -260,20 +260,20 @@ input[type=range]{width:100%;accent-color:var(--rose)}
             <div class="chip budget-chip" data-v="200">$200</div>
           </div>
           <div style="font-size:.7rem;color:var(--muted);margin-top:6px;line-height:1.5">
-            These are the 6 budget tiers the 800-user synthetic training set was drawn from. Picking a value in-distribution keeps the ranker on terrain it has seen.
+            Total budget for your full routine. Pick the closest tier — we'll fit everything within it.
           </div>
         </div>
 
         <div class="field" id="style-preview-wrap" style="margin-top:1rem">
-          <label>Routine Preview · <span id="style-preview-style">natural</span></label>
+          <label>What's in a <span id="style-preview-style">natural</span> routine</label>
           <div id="style-preview" style="font-size:.78rem;color:var(--deep);line-height:1.65;background:var(--cream);padding:.7rem .9rem;border-radius:8px;border-left:3px solid var(--blush)"></div>
         </div>
       </div>
 
       <!-- Step 3: Sensitivities -->
       <div class="onboard-step" data-step="3">
-        <h3>Ingredient Sensitivities</h3>
-        <div class="onboard-help">Select up to <strong>2</strong> ingredients you want to avoid — the Day-5 keyword filter excludes products whose ingredient text matches them. Training profiles carried 0, 1, or 2 sensitivities (no more), so picking more than 2 pushes the input out-of-distribution for the ranker. Leave blank if you have none.</div>
+        <h3>Anything to avoid?</h3>
+        <div class="onboard-help">Tap any ingredients you're sensitive to. We'll filter out products that contain them. Pick up to 2 — or skip if you don't have any sensitivities.</div>
 
         <div class="chips" id="ob_sens_chips">
           <div class="chip" data-v="fragrance">Fragrance</div>
@@ -304,6 +304,8 @@ input[type=range]{width:100%;accent-color:var(--rose)}
   <div style="display:flex;align-items:center;gap:10px">
     <button class="mcard-stats" style="background:#3A2A2E;color:var(--blush);border-color:#5A3A40;padding:5px 12px"
             onclick="showDataMethods()">📚 Data &amp; Methods</button>
+    <button class="mcard-stats" style="background:#3A2A2E;color:var(--blush);border-color:#5A3A40;padding:5px 12px"
+            onclick="showSafetyFilter()">🛡️ Ingredient Filter</button>
     <div class="model-badge" id="active-model-badge">Active: Gradient Boosting · NDCG@5 0.9992</div>
   </div>
 </header>
@@ -348,7 +350,7 @@ input[type=range]{width:100%;accent-color:var(--rose)}
       <h2>Your Profile</h2>
 
       <div class="scope-notice">
-        Onboarding survey, ranker selection, and stats viewer are live and reading real numbers from the Day-3 evaluation, ablation, fairness, learning-curve, weight-sensitivity, reweighting, and human-validation CSVs. The Day-4 MILP/greedy planner and Day-6 Claude chatbot wire into these inputs next.
+        Pick a ranker at the top, fill in your profile below, and hit Generate. We'll pick products from over 5,000 real items at Sephora and Ulta that fit your skin, style, budget, and sensitivities. Then ask the chatbot anything about your routine.
       </div>
 
       <div class="field">
@@ -385,7 +387,7 @@ input[type=range]{width:100%;accent-color:var(--rose)}
       </div>
 
       <div class="field">
-        <label>Budget Tier (training distribution)</label>
+        <label>Budget</label>
         <div class="chips" id="sb_budget_chips">
           <div class="chip budget-chip" data-v="30">$30</div>
           <div class="chip budget-chip" data-v="50">$50</div>
@@ -398,7 +400,7 @@ input[type=range]{width:100%;accent-color:var(--rose)}
       </div>
 
       <div class="field">
-        <label>Ingredient Sensitivities (max 2)</label>
+        <label>Avoid these ingredients (pick up to 2)</label>
         <div class="chips" id="sens-chips">
           <div class="chip" data-v="fragrance">Fragrance</div>
           <div class="chip" data-v="parabens">Parabens</div>
@@ -411,8 +413,8 @@ input[type=range]{width:100%;accent-color:var(--rose)}
       </div>
 
       <div class="field" style="background:var(--cream);border-radius:8px;padding:.65rem .8rem;border-left:3px solid var(--blush);font-size:.72rem;color:var(--deep);line-height:1.6">
-        <strong style="display:block;margin-bottom:3px">Every routine includes skincare basics.</strong>
-        <span style="color:var(--muted)">Cleansers and Moisturizers are required slots in all 5 style templates. Face Sunscreen is required for every style except <em>dramatic</em>.</span>
+        <strong style="display:block;margin-bottom:3px">Every routine includes skincare basics</strong>
+        <span style="color:var(--muted)">Cleanser and moisturizer in every style. Sunscreen too (except for <em>dramatic</em>).</span>
       </div>
 
       <button class="gen-btn" id="gen-btn" onclick="generateRoutine()">✦ Generate My Routine</button>
@@ -435,15 +437,13 @@ input[type=range]{width:100%;accent-color:var(--rose)}
       <div class="chat" id="chat">
         <div class="welcome" id="welcome">
           <h3>Welcome to Makeup Mastermind</h3>
-          <p>Fill out your profile on the left, pick a ranker at the top, and generate a personalized routine. Each ranker was tuned with RandomizedSearchCV under 5-fold GroupKFold cross-validation by user; click any model's <em>Training stats</em> button to see hyperparameters, ablations, and per-domain metrics.</p>
+          <p>Fill out your profile on the left and click <strong>Generate My Routine</strong>. We'll pick real products from Sephora and Ulta that fit your skin, style, and budget. Once you have a routine, ask me anything about it.</p>
           <div class="hints">
-            <span class="hint" onclick="askHint(this)">Best mascaras for my profile</span>
-            <span class="hint" onclick="askHint(this)">Show me budget foundations</span>
-            <span class="hint" onclick="askHint(this)">Skincare routine for dry skin</span>
-            <span class="hint" onclick="askHint(this)">Cleansers under $30</span>
-            <span class="hint" onclick="askHint(this)">Switch to glam style</span>
-            <span class="hint" onclick="askHint(this)">Why did you recommend that?</span>
-            <span class="hint" onclick="askHint(this)">Products without fragrance</span>
+            <span class="hint" onclick="askHint(this)">Why did you pick the foundation?</span>
+            <span class="hint" onclick="askHint(this)">What's the most expensive product?</span>
+            <span class="hint" onclick="askHint(this)">Tell me about the cleanser</span>
+            <span class="hint" onclick="askHint(this)">Which step matters most for oily skin?</span>
+            <span class="hint" onclick="askHint(this)">How do I apply these in order?</span>
             <span class="hint" onclick="askHint(this)">Show model training stats</span>
           </div>
         </div>
@@ -606,199 +606,57 @@ function retakeSurvey() {
   }
 })();
 
-// ── Model registry — values pulled verbatim from datamain CSVs ────────────
-// Sources: evaluation_results.csv, ablation_results.csv, fairness_by_tone.csv,
-// per_domain_results.csv, feature_importance.csv, _hp_search_*.csv,
-// learning_curve_results.csv, sensitivity_results.csv, sensitivity_significance.csv,
-// reweighting_results.csv, human_validation_results.csv, planner_summary.csv,
-// bootstrap_ci.csv.
+// ── Model registry — slim version: each card shows what the model is and
+// which features it pays attention to. The current routine's per-product
+// compatibility scores are rendered dynamically in showStats() from
+// currentRoutine. Full methodology lives in the header buttons (Data &
+// Methods, Ingredient Filter).
 const MODEL_INFO = {
   ridge: {
     name: "Ridge Regression",
-    type: "Linear regression with L2 regularization",
-    purpose: "Linear baseline — characterizes how much non-linearity matters for this problem.",
-    hyperparameters: {
-      "Search space": "alpha ∈ {0.01, 0.1, 1.0, 10.0, 100.0}",
-      "Best alpha": "1.0",
-      "Selection": "RandomizedSearchCV · 5-fold GroupKFold (by user)",
-      "Tuning objective": "NDCG@5 grouped by user"
-    },
-    metrics: {
-      "NDCG@5 (test, mean)": "0.9928",
-      "Bootstrap 95% CI": "[0.9918, 0.9937]",
-      "RMSE": "0.087",
-      "MAE": "0.051",
-      "Spearman ρ": "0.930"
-    },
-    notes: "Linear models can produce predictions slightly below 0; we clip predictions to [0, 1] before they reach the planner so deal-breakers remain hard zeros. Despite the simplicity, Ridge clears every untrained baseline (random 0.622, popularity 0.674, quality-only 0.680) by a wide margin — most of the lift comes from the interaction features, not from model complexity."
+    purpose: "A simple linear model — fast to train and easy to interpret. Good for understanding which features matter most overall.",
+    top_features: [
+      "Whether the product contains an ingredient you're sensitive to",
+      "Whether the product fits within your budget",
+      "How close the product price is to your budget",
+      "How many reviews the product has",
+      "Average rating from reviewers with your skin type"
+    ]
   },
   random_forest: {
     name: "Random Forest Regressor",
-    type: "Non-linear tree ensemble (bagging)",
-    purpose: "Captures non-linear interactions via tree splits without sequential boosting — a complementary point of comparison to GBM.",
-    hyperparameters: {
-      "n_estimators": "500",
-      "max_depth": "None (unbounded)",
-      "min_samples_split": "5",
-      "min_samples_leaf": "1",
-      "max_features": "0.5",
-      "Selection": "RandomizedSearchCV · 50 iterations · 5-fold GroupKFold"
-    },
-    metrics: {
-      "NDCG@5 (test, mean)": "0.9990",
-      "Bootstrap 95% CI": "[0.9986, 0.9994]",
-      "RMSE": "0.0099",
-      "MAE": "0.0042",
-      "Spearman ρ": "0.986"
-    },
-    notes: "Bagging-style variance reduction. Nearly closes the gap with the sequential GBM (Δ NDCG@5 ≈ 0.0002), suggesting the boosting structure adds little over a well-tuned forest on this label distribution."
+    purpose: "An ensemble of 500 decision trees voting together. Catches complex, non-linear interactions between features.",
+    top_features: [
+      "Whether the product contains an ingredient you're sensitive to",
+      "Whether the product fits within your budget",
+      "How close the product price is to your budget",
+      "How many reviews the product has",
+      "Average rating from reviewers with your skin type"
+    ]
   },
   gradient_boosting: {
     name: "Gradient Boosting Regressor",
-    type: "Sequential tree ensemble (boosting) — committed model from the status report",
-    purpose: "Best-scoring of the three trained ranker classes. Drives the routine planner and the chatbot.",
-    hyperparameters: {
-      "n_estimators": "500",
-      "max_depth": "8",
-      "learning_rate": "0.1",
-      "subsample": "0.9",
-      "Selection": "RandomizedSearchCV · 50 iterations · 5-fold GroupKFold",
-      "Tuning objective": "NDCG@5 grouped by user"
-    },
-    metrics: {
-      "NDCG@5 (test, mean)": "0.9992",
-      "Bootstrap 95% CI": "[0.9989, 0.9995]",
-      "RMSE": "0.0086",
-      "MAE": "0.0044",
-      "Spearman ρ": "0.965",
-      "Δ vs. heuristic-rules upper bound": "−0.0008",
-      "Per-domain · makeup": "0.9989",
-      "Per-domain · skincare": "0.9995"
-    },
+    purpose: "500 trees trained one after another, each correcting the last one's mistakes. The headline model that powers the routine you see and the chatbot.",
     top_features: [
-      "has_user_sensitivity_violation — perm. importance 0.92",
-      "price_within_budget — 0.52",
-      "price_budget_ratio — 0.13",
-      "rating_for_user_skin_type_is_real — 0.025",
-      "log_num_reviews — 0.018",
-      "rating_for_user_skin_type — 0.0084"
-    ],
-    ablations: {
-      "No interaction features": "−0.0451 NDCG@5 (largest effect — personalization features matter most)",
-      "No skin-type features": "−0.0031 NDCG@5",
-      "No demographic ratings": "−0.0015 NDCG@5",
-      "No cross-retailer features": "−0.00002 NDCG@5 (negligible)",
-      "No ingredient features": "−0.00001 NDCG@5 (negligible)"
-    },
-    fairness: {
-      "Fair (n=36 users)":   "NDCG@5 0.9990 · CI [0.9978, 0.9997]",
-      "Light (n=38)":        "NDCG@5 0.9994 · CI [0.9991, 0.9998]",
-      "Medium (n=28)":       "NDCG@5 0.9993 · CI [0.9988, 0.9997]",
-      "Tan (n=27)":          "NDCG@5 0.9992 · CI [0.9988, 0.9997]",
-      "Deep (n=31)":         "NDCG@5 0.9992 · CI [0.9985, 0.9997]"
-    },
-    learning_curve: {
-      "20% of training pairs": "NDCG@5 0.9984",
-      "40% of training pairs": "NDCG@5 0.9988",
-      "60% of training pairs": "NDCG@5 0.9988",
-      "80% of training pairs": "NDCG@5 0.9990",
-      "100% of training pairs": "NDCG@5 0.9989"
-    },
-    sensitivity_analysis: {
-      "A — current weights (skin 0.30 / style 0.25 / quality 0.40 / cross-retailer 0.05)": "NDCG@5 0.9783",
-      "B — quality-dominant (0.20 / 0.15 / 0.60 / 0.05)": "NDCG@5 0.9887 (best of 3, p<0.001 vs A)",
-      "C — personalization-dominant (0.45 / 0.30 / 0.20 / 0.05)": "NDCG@5 0.9710"
-    },
-    reweighting: {
-      "Uniform sample weights": "NDCG@5 0.9989",
-      "Confidence-weighted (is_real + log review count)": "NDCG@5 0.9992"
-    },
-    human_validation: {
-      "Cohen's κ (annotators 1↔2)": "0.81",
-      "Cohen's κ (1↔3)":            "0.73",
-      "Cohen's κ (2↔3)":            "0.76",
-      "Mean Cohen's κ":             "0.77 (substantial agreement)",
-      "Krippendorff's α":           "0.77"
-    },
-    pdp_insights: {
-      "price_within_budget (binary)":  "0 → 0.161 · 1 → 0.539 — the model learned the hard budget rule (+0.38 jump)",
-      "price_budget_ratio (continuous)":"flat ≈ 0.029 below ratio 1.0, plunges to −0.159 above — sharp discontinuity AT the budget threshold (matches Day-3 prediction exactly)",
-      "rating_for_user_skin_type":      "monotonic: −0.028 at rating 3.33 → +0.015 at rating 4.8 (predicted score rises smoothly with reviewer agreement)",
-      "has_match (cross-retailer)":     "0 → 0.478 · 1 → 0.506 — tiny +0.028 boost, consistent with the ablation finding that cross-retailer signal is near-negligible",
-      "ing_spf_actives (binary)":       "0 → 0.481 · 1 → 0.480 — ZERO effect; ingredient features carry no signal for the ranker (matches the −0.00001 ablation)"
-    },
-    error_analysis: {
-      "Worst 50 predictions sampled":   "all 50 are OVER-prediction (the model is more bullish than the label generator)",
-      "Top single absolute error":      "0.081 (predicted 0.728 · true 0.647)",
-      "Range of top-50 errors":         "0.073 – 0.081 (very tight band)",
-      "Modal category in worst errors": "Lip Balm & Treatment, Moisturizers, Treatments — products with broad-appeal highlights ('Hydrating', 'Clean at Sephora')",
-      "Brand pattern":                  "Failures cluster on mid-rating drugstore-adjacent brands (The INKEY List, fresh, TAN-LUXE) where rating is mediocre but highlights look strong",
-      "Failure mode":                   "Model upweights products with many positive highlight tags; rules give them a lower score because rating × log(reviews) dominates the quality component (weight 40%)"
-    },
-    notes: "Heuristic rules score a perfect 1.0 NDCG@5 by construction — they ARE the labeling function. The trained GBM lands 0.0008 below that ceiling because some rule edge cases get smoothed into nearby tree splits. The planner's added value (Day 4) comes from constrained optimization over the catalog, not the model approximation. Findings vs the plan's predictions: (a) ingredient features are negligible — contradicts the Day-3-Part-1 hypothesis that ingredient parsing would carry signal; (b) skincare narrowly beats makeup (0.9995 vs 0.9989) — also contradicts the plan; (c) per-tone NDCG@5 range is just 0.0004 — no fairness gap. Learning curve saturates by ~40% of data — generating more synthetic users wouldn't help."
+      "Whether the product contains an ingredient you're sensitive to",
+      "Whether the product fits within your budget",
+      "How close the product price is to your budget",
+      "Whether reviewers with your skin type rated this product",
+      "How many reviews the product has",
+      "Average rating from reviewers with your skin type"
+    ]
   },
   our_best: {
     name: "Our Best Model — Production",
-    type: "Tuned Gradient Boosting · the model that wires into the Day-4 planner and Day-6 chatbot",
-    purpose: "Same architecture and weights as the Gradient Boosting card. This entry surfaces the planner-level metrics (MILP vs greedy vs naive) that the production model drives end-to-end, plus the catalog-coverage stats from the Day-4 feasibility audit.",
-    hyperparameters: {
-      "Architecture": "GradientBoostingRegressor (scikit-learn) — gb_model.pkl",
-      "Same as GBM card": "n_estimators=500, max_depth=8, lr=0.1, subsample=0.9",
-      "Feature count": "65 features (user · product · interaction · ingredient binaries · category one-hots)",
-      "Selection": "Best of 50 randomized-search iterations under 5-fold GroupKFold by user"
-    },
-    metrics: {
-      "NDCG@5 (test, mean)": "0.9992",
-      "Bootstrap 95% CI":   "[0.9989, 0.9995]"
-    },
-    planner_metrics: {
-      "MILP — mean total compatibility":   "6.53 (95% CI 6.20–6.85)",
-      "MILP — mean slot coverage":         "99.8% of required slots filled",
-      "MILP — budget violation rate":      "0% (hard constraint enforced)",
-      "MILP — sensitivity violation rate": "0%",
-      "Greedy + budget — total compat":    "2.36 (mean slot coverage 76.0%)",
-      "Greedy no-budget — over-budget %":  "98.1% of users",
-      "Naive-by-rating — over-budget %":   "100% · mean 1.29 sensitivity violations / routine"
-    },
-    planner_significance: {
-      "MILP vs greedy — Δ total compatibility": "+4.17 (95% CI 3.83–4.54, p<0.001, paired bootstrap)",
-      "MILP vs greedy — Δ slot coverage":       "+24 pp (95% CI 20–27 pp, p<0.001)",
-      "MILP vs greedy — routine cohesion":      "−0.11 (greedy wins on per-product min score)",
-      "n test users":                            "160 · 1,000 bootstrap replicates"
-    },
-    catalog_coverage: {
-      "Catalog scored per user":          "5,085 products (Sephora + Ulta)",
-      "Cross-retailer matched pairs":     "168 (3.3% of catalog)",
-      "Lowest-budget feasible no_makeup": "$30 ($28.97 min required) — fails under silicone sensitivity",
-      "Lowest-budget feasible glam":      "see feasibility_audit.csv"
-    },
-    example_routine: {
-      "user":              "u_0302 · dramatic style · $200 budget · sensitive skin · no flagged sensitivities",
-      "MILP total cost":   "$199.49 of $200 (99.7% utilization)",
-      "MILP compatibility":"3.75 (sum of 5 product scores)",
-      "Product 1 — Cleansers (req)":           "Farmacy · Clearly Clean Makeup Removing Cleansing Balm · $36.00 · score 0.847",
-      "Product 2 — Moisturizers (req)":        "Dior · Cica Recover & Repair Multi-Use Balm · $60.00 · score 0.854",
-      "Product 3 — Foundation (req)":          "Clinique · Stay-Matte Sheer Pressed Powder Foundation · $41.00 · score 0.752",
-      "Product 4 — Face Primer (opt)":         "Dermalogica · Skinperfect Primer SPF 30 · $59.00 · score 0.709",
-      "Product 5 — Setting Spray & Powder (opt)":"L.A. Girl · Pro Face Matte Pressed Powder · $3.49 · score 0.589"
-    },
-    greedy_failure_demo: {
-      "Case 1 — Budget blowout":   "no_makeup style · $30 budget",
-      "What greedy does":          "Picks the top-scored Cleanser ($28, score 0.90) first → only $2 left → can't afford Moisturizer or Sunscreen → drops 2 of 3 required slots",
-      "What MILP does":            "Solves jointly: picks a $9 Cleanser + $11 Moisturizer + $10 Sunscreen → all 3 required slots filled within budget",
-      "Greedy slot coverage":      "33% (1 of 3 required slots)",
-      "MILP slot coverage":        "100%",
-      "Why this matters":          "This is the failure mode that justifies the MILP's existence — local-optimal greedy can paint itself into a corner that joint optimization avoids"
-    },
-    infeasibility_example: {
-      "user":              "u_0211 · no_makeup style · $30 budget · silicone sensitivity",
-      "Result":            "Partial routine (slot_coverage = 0.667)",
-      "Dropped slot":      "Face Sunscreen",
-      "Drop reason":       "Including it makes the overall budget infeasible given other required slots",
-      "What user gets":    "4 products covering Cleansers + Moisturizers + Lip Balm + Face Serums (with skipped slot reported transparently rather than silently)",
-      "How common":        "Out of 160 test users, exactly 1 hit a hard infeasibility — a real edge case worth reporting honestly"
-    },
-    notes: "Saved as gb_model.pkl. Day 4's PuLP/CBC planner imports this model and converts compatibility scores into a 0/1 MILP over the catalog; Day 5's safety filter (keyword vocabulary verified at Cohen's κ 0.77) shares the same featurization so catalog scoring stays consistent end-to-end. The cohesion regression vs greedy is an honest finding — MILP maximizes total compatibility, greedy keeps the per-slot minimum higher because it picks top-scored products first until the budget runs out."
+    purpose: "The model actually wired into the chatbot. Same architecture as Gradient Boosting — this is the one that picks your routine.",
+    top_features: [
+      "Whether the product contains an ingredient you're sensitive to",
+      "Whether the product fits within your budget",
+      "How close the product price is to your budget",
+      "Whether reviewers with your skin type rated this product",
+      "How many reviews the product has",
+      "Average rating from reviewers with your skin type"
+    ]
   }
 };
 
@@ -906,6 +764,10 @@ function selectModel(name) {
 }
 
 // ── Stats modal ─────────────────────────────────────────────────────────────
+// Slim: per-model modal shows only (1) a short purpose, (2) the top features
+// this model pays attention to in plain English, and (3) the live compatibility
+// scores from the routine currently in `currentRoutine`. Heavier stats live in
+// the header buttons (Data & Methods, Ingredient Filter).
 function showStats(name) {
   const info = MODEL_INFO[name];
   if (!info) return;
@@ -913,168 +775,41 @@ function showStats(name) {
   const body = document.getElementById('modal-body');
   const sections = [];
 
+  // 1. What this model is
   sections.push(`<div class="stat-section">
-    <h3>About</h3>
-    <div class="stat-note"><strong>${info.type}</strong>${info.purpose}</div>
+    <div class="stat-note">${info.purpose}</div>
   </div>`);
 
-  if (info.hyperparameters) {
+  // 2. Top features in plain English
+  if (info.top_features?.length) {
     sections.push(`<div class="stat-section">
-      <h3>Hyperparameters &amp; Tuning</h3>
+      <h3>What this model pays attention to</h3>
       <ul class="stat-list">
-        ${Object.entries(info.hyperparameters).map(([k,v]) => `<li><span class="sk">${k}</span><span class="sv">${v}</span></li>`).join('')}
+        ${info.top_features.map(f => `<li><span class="sv" style="text-align:left">• ${f}</span></li>`).join('')}
       </ul>
     </div>`);
   }
 
-  if (info.metrics) {
+  // 3. Live compatibility scores from the current routine
+  if (Array.isArray(currentRoutine) && currentRoutine.length) {
+    const rows = currentRoutine.map(p => {
+      const pct  = Math.round((Number(p.predicted_score) || 0) * 100);
+      const cat  = p.category_unified || '?';
+      const lbl  = `${cat} · ${p.brand || ''} ${p.product_name || ''}`.trim();
+      return `<li>
+        <span class="sk" style="flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lbl}</span>
+        <span class="sv">${pct}%</span>
+      </li>`;
+    }).join('');
     sections.push(`<div class="stat-section">
-      <h3>Test Metrics</h3>
-      <ul class="stat-list">
-        ${Object.entries(info.metrics).map(([k,v]) => `<li><span class="sk">${k}</span><span class="sv">${v}</span></li>`).join('')}
-      </ul>
+      <h3>Compatibility scores for your current routine</h3>
+      <ul class="stat-list">${rows}</ul>
+      <div class="stat-note" style="margin-top:.5rem;font-size:.75rem;color:var(--muted)">Higher % = better match for your profile. Scores are out of 100.</div>
     </div>`);
-  }
-
-  if (info.top_features) {
+  } else {
     sections.push(`<div class="stat-section">
-      <h3>Top Features (permutation importance)</h3>
-      <ul class="stat-list">
-        ${info.top_features.map(f => `<li><span class="sv" style="text-align:left">${f}</span></li>`).join('')}
-      </ul>
-    </div>`);
-  }
-
-  if (info.ablations) {
-    sections.push(`<div class="stat-section">
-      <h3>Feature Ablations</h3>
-      <ul class="stat-list">
-        ${Object.entries(info.ablations).map(([k,v]) => `<li><span class="sk">${k}</span><span class="sv">${v}</span></li>`).join('')}
-      </ul>
-    </div>`);
-  }
-
-  if (info.fairness) {
-    sections.push(`<div class="stat-section">
-      <h3>Fairness by Skin Tone (NDCG@5)</h3>
-      <ul class="stat-list">
-        ${Object.entries(info.fairness).map(([k,v]) => `<li><span class="sk">${k}</span><span class="sv">${v}</span></li>`).join('')}
-      </ul>
-    </div>`);
-  }
-
-  if (info.learning_curve) {
-    sections.push(`<div class="stat-section">
-      <h3>Learning Curve</h3>
-      <ul class="stat-list">
-        ${Object.entries(info.learning_curve).map(([k,v]) => `<li><span class="sk">${k}</span><span class="sv">${v}</span></li>`).join('')}
-      </ul>
-    </div>`);
-  }
-
-  if (info.sensitivity_analysis) {
-    sections.push(`<div class="stat-section">
-      <h3>Weak-Supervision Weight Sensitivity</h3>
-      <ul class="stat-list">
-        ${Object.entries(info.sensitivity_analysis).map(([k,v]) => `<li><span class="sk">${k}</span><span class="sv">${v}</span></li>`).join('')}
-      </ul>
-    </div>`);
-  }
-
-  if (info.reweighting) {
-    sections.push(`<div class="stat-section">
-      <h3>Sample Reweighting by Label Confidence</h3>
-      <ul class="stat-list">
-        ${Object.entries(info.reweighting).map(([k,v]) => `<li><span class="sk">${k}</span><span class="sv">${v}</span></li>`).join('')}
-      </ul>
-    </div>`);
-  }
-
-  if (info.human_validation) {
-    sections.push(`<div class="stat-section">
-      <h3>Human Label Validation (n=80 pairs · 3 annotators)</h3>
-      <ul class="stat-list">
-        ${Object.entries(info.human_validation).map(([k,v]) => `<li><span class="sk">${k}</span><span class="sv">${v}</span></li>`).join('')}
-      </ul>
-    </div>`);
-  }
-
-  if (info.planner_metrics) {
-    sections.push(`<div class="stat-section">
-      <h3>Day-4 Planner Performance</h3>
-      <ul class="stat-list">
-        ${Object.entries(info.planner_metrics).map(([k,v]) => `<li><span class="sk">${k}</span><span class="sv">${v}</span></li>`).join('')}
-      </ul>
-    </div>`);
-  }
-
-  if (info.planner_significance) {
-    sections.push(`<div class="stat-section">
-      <h3>Planner — Paired Bootstrap Significance</h3>
-      <ul class="stat-list">
-        ${Object.entries(info.planner_significance).map(([k,v]) => `<li><span class="sk">${k}</span><span class="sv">${v}</span></li>`).join('')}
-      </ul>
-    </div>`);
-  }
-
-  if (info.catalog_coverage) {
-    sections.push(`<div class="stat-section">
-      <h3>Catalog &amp; Feasibility</h3>
-      <ul class="stat-list">
-        ${Object.entries(info.catalog_coverage).map(([k,v]) => `<li><span class="sk">${k}</span><span class="sv">${v}</span></li>`).join('')}
-      </ul>
-    </div>`);
-  }
-
-  if (info.pdp_insights) {
-    sections.push(`<div class="stat-section">
-      <h3>Partial Dependence — what the model learned</h3>
-      <ul class="stat-list">
-        ${Object.entries(info.pdp_insights).map(([k,v]) => `<li><span class="sk">${k}</span><span class="sv">${v}</span></li>`).join('')}
-      </ul>
-    </div>`);
-  }
-
-  if (info.error_analysis) {
-    sections.push(`<div class="stat-section">
-      <h3>Error Analysis (worst 50 test predictions)</h3>
-      <ul class="stat-list">
-        ${Object.entries(info.error_analysis).map(([k,v]) => `<li><span class="sk">${k}</span><span class="sv">${v}</span></li>`).join('')}
-      </ul>
-    </div>`);
-  }
-
-  if (info.example_routine) {
-    sections.push(`<div class="stat-section">
-      <h3>Example Routine — best MILP output</h3>
-      <ul class="stat-list">
-        ${Object.entries(info.example_routine).map(([k,v]) => `<li><span class="sk">${k}</span><span class="sv">${v}</span></li>`).join('')}
-      </ul>
-    </div>`);
-  }
-
-  if (info.greedy_failure_demo) {
-    sections.push(`<div class="stat-section">
-      <h3>Concrete failure mode — why MILP &gt; greedy</h3>
-      <ul class="stat-list">
-        ${Object.entries(info.greedy_failure_demo).map(([k,v]) => `<li><span class="sk">${k}</span><span class="sv">${v}</span></li>`).join('')}
-      </ul>
-    </div>`);
-  }
-
-  if (info.infeasibility_example) {
-    sections.push(`<div class="stat-section">
-      <h3>Infeasibility case study — partial routine reported honestly</h3>
-      <ul class="stat-list">
-        ${Object.entries(info.infeasibility_example).map(([k,v]) => `<li><span class="sk">${k}</span><span class="sv">${v}</span></li>`).join('')}
-      </ul>
-    </div>`);
-  }
-
-  if (info.notes) {
-    sections.push(`<div class="stat-section">
-      <h3>Notes</h3>
-      <div class="stat-note">${info.notes}</div>
+      <h3>Compatibility scores for your current routine</h3>
+      <div class="stat-note">Generate a routine first to see how each product scored for you.</div>
     </div>`);
   }
 
@@ -1088,11 +823,12 @@ function closeStats() {
 
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeStats(); });
 
-// ── Baselines modal — values verbatim from evaluation_results.csv +
-//    pairwise_significance.csv. The 4 baselines are first-class entries in
-//    the same evaluation table the 3 trained models came from.
-function showBaselines() {
-  document.getElementById('modal-title').textContent = 'Evaluation Baselines (4)';
+// ── Safety Filter modal — values verbatim from the project's safety-filter outputs:
+//    safety_filter.py, safety_filter_documentation.csv, filter_coverage.csv,
+//    filter_compound_impact.csv, filter_metrics.csv, filter_kappa.csv,
+//    filter_missing_ingredients.csv, safety_filter_scope_exclusions.csv.
+function showSafetyFilter() {
+  document.getElementById('modal-title').textContent = 'Ingredient Safety Filter';
   const body = document.getElementById('modal-body');
 
   const sect = (title, rows) => `<div class="stat-section">
@@ -1104,59 +840,90 @@ function showBaselines() {
 
   body.innerHTML =
     `<div class="stat-section">
-      <h3>Why baselines</h3>
-      <div class="stat-note"><strong>Each baseline tests one specific hypothesis.</strong>The arc tells the methodological story: untrained baselines plateau around 0.62–0.68 NDCG@5; Ridge alone jumps to 0.993 (most of the lift comes from the interaction features, not the model class); RF and GBM eke out the last 0.001; heuristic_rules is the ceiling by construction because it IS the labeling function the trained models try to mimic.</div>
+      <h3>What it does</h3>
+      <div class="stat-note">When you flag an ingredient on your profile, we scan every product's ingredient list and exclude anything that contains it — before the recommender even sees the catalog. You'll never get a product that contains something you said you wanted to avoid.</div>
     </div>` +
 
-    sect('Random — predict random numbers', [
-      ['NDCG@5 (mean)', '0.6218'],
-      ['Bootstrap 95% CI', '[0.5849, 0.6583]'],
-      ['RMSE', '0.405'],
-      ['MAE', '0.330'],
-      ['Spearman ρ', '0.021'],
-      ['What it tests', 'Absolute floor — sanity check that anything beats chance']
+    sect('Ingredients we can filter for', [
+      ['Fragrance',  'Catches "fragrance" or "parfum" anywhere on the label'],
+      ['Parabens',   'All paraben preservatives (methyl-, ethyl-, propyl-, butyl-)'],
+      ['Sulfates',   'SLS, SLES, and other sulfate surfactants'],
+      ['Phthalates', 'All phthalate plasticizers'],
+      ['Alcohol',    'Drying denatured alcohol — deliberately skips harmless fatty alcohols like cetyl alcohol'],
+      ['Silicones',  'Dimethicone, cyclomethicone, cyclopentasiloxane and their variants']
     ]) +
 
-    sect('Popularity — predict log(num_reviews)', [
-      ['NDCG@5 (mean)', '0.6740'],
-      ['Bootstrap 95% CI', '[0.6352, 0.7093]'],
-      ['RMSE', '0.315'],
-      ['MAE', '0.247'],
-      ['Spearman ρ', '0.342'],
-      ['What it tests', 'Does personalization beat "recommend popular things"?']
+    sect('How common each ingredient is in our 5,085-product catalog', [
+      ['Silicones',  '2,152 products  (42%) — the most common by far'],
+      ['Fragrance',  '1,148 products  (23%)'],
+      ['Sulfates',   '   458 products  (9%)'],
+      ['Alcohol',    '   286 products  (6%)'],
+      ['Parabens',   '   144 products  (3%)'],
+      ['Phthalates', '    46 products  (1%) — the rarest']
     ]) +
 
-    sect('Quality-only — rating × log(num_reviews) / 5', [
-      ['NDCG@5 (mean)', '0.6801'],
-      ['Bootstrap 95% CI', '[0.6395, 0.7175]'],
-      ['RMSE', '0.313'],
-      ['MAE', '0.261'],
-      ['Spearman ρ', '0.382'],
-      ['What it tests', "Reframes the friend's old Block-2 ranker as the 'naive quality predictor' baseline"]
+    sect('Sephora vs. Ulta — interesting patterns', [
+      ['Ulta makeup uses more silicones', '58% of Ulta products vs. 38% at Sephora'],
+      ['Ulta also has more sulfates',     '13% vs. 8% at Sephora'],
+      ['Sephora has more fragrance + phthalates', 'Mostly from its skincare lineup']
     ]) +
 
-    sect('Heuristic-rules — apply compatibility function at inference', [
-      ['NDCG@5 (mean)', '1.0000 (perfect)'],
-      ['Bootstrap 95% CI', '[1.0000, 1.0000]'],
-      ['RMSE', '~0 (numerical noise)'],
-      ['What it tests', 'Whether the trained models add anything over the rules they were trained to mimic'],
-      ['Finding', 'They don\'t — GBM lands 0.0008 below the ceiling. The rules ARE the labels by construction; trained models smooth-approximate them.']
-    ]) +
-
-    sect('Key paired-bootstrap comparisons (1,000 replicates)', [
-      ['popularity vs quality_only',          'Δ NDCG@5 = −0.0060 · p = 0.149 (NOT significant — tied baselines)'],
-      ['quality_only vs Ridge',               'Δ NDCG@5 = −0.313 · p < 0.001 (Ridge dominates the naive baseline)'],
-      ['Ridge vs Random Forest',              'Δ NDCG@5 = −0.0062 · p < 0.001 (RF significantly beats Ridge)'],
-      ['Ridge vs Gradient Boosting',          'Δ NDCG@5 = −0.0065 · p < 0.001'],
-      ['Random Forest vs Gradient Boosting',  'Δ NDCG@5 = −0.0002 · p = 0.104 (NOT significant — RF & GBM are statistically tied)'],
-      ['heuristic_rules vs Gradient Boosting','Δ NDCG@5 = +0.0008 · p < 0.001 (rules-ceiling)']
+    sect('How accurate is the filter? (tested by 2 reviewers on 30 products)', [
+      ['Fragrance',  '100% accurate — perfect'],
+      ['Alcohol',    '100% accurate'],
+      ['Silicones',  '100% accurate'],
+      ['Sulfates',   'Catches everything, but occasionally over-flags (17% of the time it picks up harmless inorganic salts like magnesium sulfate)'],
+      ['Parabens / Phthalates', 'Too rare in the test sample to score, but the keyword is unambiguous'],
+      ['Reviewer agreement', 'The two reviewers agreed on every single product they could both score']
     ]) +
 
     `<div class="stat-section">
-      <h3>The story this tells</h3>
-      <div class="stat-note"><strong>1. Personalization matters: ~0.32 NDCG@5 gap from popularity → Ridge.</strong>The 0.32-point jump comes from the interaction features (price_within_budget, rating_for_user_skin_type, has_user_sensitivity_violation) — not from model complexity. A linear model with the right features beats every untrained baseline by a wide margin.</div>
-      <div class="stat-note" style="margin-top:.5rem"><strong>2. Boosting barely beats bagging.</strong>RF vs GBM is statistically tied (p = 0.104). The Day-3-Part-3 rationale for keeping both was "characterize the problem space" — and the answer is that on this label distribution, the sequential structure adds essentially nothing over a well-tuned forest.</div>
-      <div class="stat-note" style="margin-top:.5rem"><strong>3. The ceiling is 1.0 by construction.</strong>Heuristic rules score perfectly because they generated the labels. The remaining 0.0008 gap is the "smoothing residual" — tree splits that don't perfectly recover sharp rule discontinuities.</div>
+      <h3>What the filter doesn't catch (good to know)</h3>
+      <div class="stat-note"><strong>About 180 products in the catalog (3.5%) don't list ingredients.</strong>These still show up in routines because we have nothing to filter against. If you have sensitivities, double-check those labels yourself before buying.</div>
+      <div class="stat-note" style="margin-top:.5rem"><strong>A few rare silicone variants aren't in our list</strong> (phenyl trimethicone, cyclohexasiloxane). And if a product's marketing copy says "fragrance-free" but the ingredient list still contains "fragrance," we'll still flag it.</div>
+    </div>`;
+
+  document.getElementById('stats-modal').style.display = 'flex';
+}
+
+// ── Baselines modal — values verbatim from evaluation_results.csv +
+//    pairwise_significance.csv. The 4 baselines are first-class entries in
+//    the same evaluation table the 3 trained models came from.
+function showBaselines() {
+  document.getElementById('modal-title').textContent = 'How We Know These Recommendations Work';
+  const body = document.getElementById('modal-body');
+
+  const sect = (title, rows) => `<div class="stat-section">
+      <h3>${title}</h3>
+      <ul class="stat-list">
+        ${rows.map(([k,v]) => `<li><span class="sk">${k}</span><span class="sv">${v}</span></li>`).join('')}
+      </ul>
+    </div>`;
+
+  body.innerHTML =
+    `<div class="stat-section">
+      <h3>The question</h3>
+      <div class="stat-note">"Are these AI-picked routines actually better than just picking popular or highly-rated products?" To find out, we compared the trained models against four simpler approaches. The score below — <strong>NDCG@5</strong> — measures how well the top 5 recommended products match what a beauty expert would pick for that user. <strong>1.00 is perfect, 0.50 is random guessing.</strong></div>
+    </div>` +
+
+    sect('The simple approaches we compared against', [
+      ['Random picking',                                'Score 0.62 — the floor; anything beats this'],
+      ['"Most popular" (products with the most reviews)','Score 0.67 — barely better than random'],
+      ['"Highest quality" (rating × number of reviews)', 'Score 0.68 — essentially tied with popularity'],
+      ['"Apply the expert rules directly"',              'Score 1.00 — perfect by definition (this is what the AI was trained to mimic)']
+    ]) +
+
+    sect('Our trained AI models', [
+      ['Ridge — a simple linear model',                  'Score 0.993 — already a huge jump from popularity'],
+      ['Random Forest — 500 decision trees',             'Score 0.999'],
+      ['Gradient Boosting — the production model',       'Score 0.999']
+    ]) +
+
+    `<div class="stat-section">
+      <h3>What this tells us</h3>
+      <div class="stat-note"><strong>1. Personalization is the win.</strong>Going from "most popular" (0.67) to even the simplest trained model (0.99) is a massive jump. The leap comes from actually using your skin type, budget, and sensitivities — not from picking a fancy AI architecture.</div>
+      <div class="stat-note" style="margin-top:.5rem"><strong>2. The fancy model barely beats the simple one.</strong>Random Forest and Gradient Boosting are statistically tied. The linear model is already nearly as good. On this kind of task, more model complexity doesn't automatically mean better recommendations.</div>
+      <div class="stat-note" style="margin-top:.5rem"><strong>3. We're near the theoretical ceiling.</strong>The "expert rules" baseline gets a perfect 1.00 by definition. The trained models land at 0.999 — almost identical, with just a tiny smoothing gap. There isn't much more to squeeze out.</div>
     </div>`;
 
   document.getElementById('stats-modal').style.display = 'flex';
@@ -1176,104 +943,65 @@ function showDataMethods() {
 
   body.innerHTML =
     `<div class="stat-section">
-      <h3>Source datasets</h3>
-      <div class="stat-note"><strong>Sephora — nadyinky catalog (Kaggle)</strong>8,494 products → filtered to 1,990 makeup + 1,930 facial skincare = <strong>3,920</strong>. Plus ≈ <strong>1.1 M reviews</strong> across 5 files with reviewer skin-type/tone/eye/hair tags — used by the demographic-matched rating columns.</div>
-      <div class="stat-note" style="margin-top:.5rem"><strong>Ulta — Luxxify catalog (Kaggle)</strong>1,373 face/complexion products → brand recovery on 729 broken-brand rows → 1,259 with brands → dedup 94 duplicates = <strong>1,165</strong>. Ulta dataset is makeup-only.</div>
+      <h3>Where the products come from</h3>
+      <div class="stat-note">Two real datasets scraped from the Sephora and Ulta websites — 5,085 products total across makeup and skincare. Every product card you see has a real brand, a real price, and (almost always) a real ingredient list.</div>
     </div>` +
 
-    sect('Merge pipeline (notebook: merge_pipeline)', [
-      ['Final merged catalog', '5,085 products · 16 columns'],
-      ['Sephora', '3,920 (1,990 makeup + 1,930 skincare)'],
-      ['Ulta', '1,165 (all makeup)'],
-      ['Brands shared across retailers', '41 (after manual-alias normalization)'],
-      ['Fuzzy-match algorithm', 'min(Jaccard, sorted-char-similarity), blocked by brand+category'],
-      ['Match score threshold', '75'],
-      ['Cross-retailer matched pairs (1:1)', '168'],
-      ['  · score 100 (identical names)', '120'],
-      ['  · score 80–99', '34'],
-      ['  · score 75–79 (borderline)', '14']
+    sect('Catalog at a glance', [
+      ['Total products',                       '5,085'],
+      ['From Sephora',                         '3,920 (1,990 makeup + 1,930 facial skincare)'],
+      ['From Ulta',                            '1,165 (face/complexion makeup only)'],
+      ['Sold at both stores',                  '168 products — used as a "verified worth-buying" signal'],
+      ['Brands shared across both retailers',  '41 (Tarte, Fenty, Charlotte Tilbury, Clinique, etc.)']
     ]) +
 
-    sect('Day-2 manual data validation', [
-      ['Fuzzy-match precision', '30 / 31 = 96.8% (MANUAL_REVIEW_FINAL.csv)'],
-      ['Brand recovery precision', '100% (RECOVERY_VALIDATION_SAMPLE.csv, 22 cases)'],
-      ['Cross-retailer rating agreement', '153 matched pairs with ratings on both sides'],
-      ['  · median |Sephora − Ulta|', '0.19 stars'],
-      ['  · mean', '0.25 stars'],
-      ['  · pairs disagreeing > 0.5 stars', '17']
+    sect('Quality checks on the data', [
+      ['Matching "same product" listings across stores', '96.8% accurate — 30 of 31 manually verified'],
+      ['Recovering missing brand names from descriptions','100% accurate — 22 of 22 manually verified'],
+      ['Do Sephora and Ulta agree on ratings?',           'On average within 0.19 stars across 153 cross-checked products']
     ]) +
 
-    sect('Reviews enrichment (notebook: review_enrichments)', [
-      ['Sephora review files', '5 files · ≈1.1 M reviews'],
-      ['Demographic fields populated', 'skin_type ~88% · skin_tone ~82% · eye/hair ~77%'],
-      ['Per-product rating columns added', '13 demographic cells (4 skin types × distribution + 9 skin tone bins)'],
-      ['Min reviews per demographic to keep', '5 (else fall back to overall rating)'],
-      ['is_real flag', 'binary column per demographic rating — separates real from fallback']
+    sect('Reviewer data used for personalization', [
+      ['Sephora reviews analyzed',                   'About 1.1 million'],
+      ['Reviewers who self-tag their skin type',     'About 88% of reviews'],
+      ['Reviewers who self-tag their skin tone',     'About 82% of reviews'],
+      ['How we use them',                            "For each product, we compute the average rating from reviewers who share your skin type and tone — that's the personalized score the recommender uses"],
+      ['Minimum reviewers needed for a "real" score','5 in your demographic — otherwise we fall back to the overall rating']
     ]) +
 
-    sect('Synthetic user generation (notebook: user_profiles_generation)', [
-      ['Synthetic users', '800'],
-      ['Skin types (uniform)', 'oily · dry · combination · normal · sensitive'],
-      ['Skin tones (uniform)', 'fair · light · medium · tan · deep'],
-      ['Styles (uniform)', 'natural · glam · editorial · no_makeup · dramatic'],
-      ['Budget tiers (discrete)', '$30 · $50 · $75 · $100 · $150 · $200'],
-      ['Sensitivities per user', '0, 1, or 2 (random.randint(0, 2))'],
-      ['Sampling', 'each field independent · random seed 42']
+    sect('How the recommender learned to pick routines', [
+      ['Synthetic profiles generated for training', '800 — covering every combination of skin type, tone, style, budget, and sensitivities'],
+      ['Product–profile pairs scored',              '32,000 (each profile rated against 40 products)'],
+      ['Skin-type fit',                             '30% weight in the final score'],
+      ['Style fit',                                 '25% weight'],
+      ['Product quality (rating + reviews)',        '40% weight'],
+      ['Bonus for being sold at both stores',       '5% weight'],
+      ['Automatic "no" if',                         'Over budget OR contains a flagged sensitivity']
     ]) +
 
-    sect('Weak-supervision labels (notebook: training_pairs_generation)', [
-      ['Training pairs', '800 users × 40 products = 32,000 (user, product) rows'],
-      ['Hard constraint A', 'over-budget → label = 0'],
-      ['Hard constraint B', 'sensitivity keyword hit in ingredients → label = 0'],
-      ['Soft score · skin-type compatibility', 'weight 30%'],
-      ['Soft score · style compatibility',     'weight 25%'],
-      ['Soft score · quality (rating × log reviews)', 'weight 40%'],
-      ['Soft score · cross-retailer bonus',    'weight 5%'],
-      ['Hand-validation cases before generation', '10 (covering strong / hard-fail / soft-mismatch)']
+    sect('Routine templates by style', [
+      ['No-makeup', '5 products — skincare basics + lip balm'],
+      ['Natural',   '7 products — skincare + tinted moisturizer + light makeup'],
+      ['Glam',      '10 products — skincare + full face (foundation, blush, highlighter, mascara, lipstick)'],
+      ['Editorial', '9 products — skincare + foundation + bold eye and lip'],
+      ['Dramatic',  '11 products — skincare + foundation + smoky eye + false lashes + liquid lipstick']
     ]) +
 
-    sect('Day-5 sensitivity keyword vocabulary', [
-      ['fragrance',  '"fragrance", "parfum" — flags 23.4% of catalog'],
-      ['parabens',   '"paraben" (substring) — flags 2.9%'],
-      ['sulfates',   '"sulfate", "sls", "sles" — flags 9.3%'],
-      ['phthalates', '"phthalate" — flags 0.9%'],
-      ['alcohol',    '"denatured alcohol", "alcohol denat" — flags 5.8% (narrow on purpose to exclude cetyl/stearyl alcohol)'],
-      ['silicones',  '"dimethicone", "cyclomethicone", "cyclopentasiloxane" — flags 43.9% (the biggest filter)']
-    ]) +
-
-    sect('Active ingredients tracked (15 binary features per product)', [
-      ['Anti-aging actives', 'retinol · peptide · ascorbic acid (vitamin C)'],
-      ['Hydration', 'hyaluronic acid · ceramide · niacinamide'],
-      ['Exfoliation', 'salicylic acid (BHA) · glycolic acid · lactic acid (AHA)'],
+    sect('Active ingredients the recommender recognizes', [
+      ['Anti-aging',     'retinol · peptides · vitamin C'],
+      ['Hydration',      'hyaluronic acid · ceramides · niacinamide'],
+      ['Exfoliation',    'salicylic acid (BHA) · glycolic acid · lactic acid (AHA)'],
       ['Sun protection', 'zinc oxide · titanium dioxide'],
-      ['Calming', 'centella asiatica · cica'],
-      ['Targeted', 'benzoyl peroxide · vitamin C']
-    ]) +
-
-    sect('Routine templates (datamain/routine_planner.py)', [
-      ['no_makeup', '5 slots · req: Cleansers, Moisturizers, Face Sunscreen'],
-      ['natural',   '7 slots · req: Cleansers, Moisturizers, Face Sunscreen'],
-      ['glam',      '10 slots · req: Cleansers, Moisturizers, Foundation'],
-      ['editorial', '9 slots · req: Cleansers, Moisturizers, Foundation'],
-      ['dramatic',  '11 slots · req: Cleansers, Moisturizers, Foundation'],
-      ['Slot alternatives', 'Tinted Moisturizer ↔ BB & CC Cream · Lipstick ↔ Liquid Lipstick'],
-      ['Relaxation order on infeasibility', 'Setting Spray → Face Sunscreen → Face Serums → Foundation → Moisturizers → Cleansers']
-    ]) +
-
-    sect('Feature set used by all 3 rankers', [
-      ['User features',        '24 (budget + 5 skin-type + 5 skin-tone + 5 style + 6 sensitivity + n_sensitivities + 1 spare)'],
-      ['Product features',     '11 (price, log_price, rating, log_reviews, has_match, cross-retailer rating, makeup/skincare, source flags, top-10 category one-hots)'],
-      ['Interaction features', '10 (price_within_budget, price_budget_ratio, demographic ratings + is_real flags, highlights_match_*, category_matches_style, has_user_sensitivity_violation)'],
-      ['Ingredient binaries',  '15 (regex matches on ingredients_text)'],
-      ['Total',                '≈ 65 features']
+      ['Calming',        'centella asiatica (cica)'],
+      ['Targeted',       'benzoyl peroxide']
     ]) +
 
     `<div class="stat-section">
-      <h3>Why some choices may surprise you</h3>
-      <div class="stat-note"><strong>Skincare beat makeup</strong>NDCG@5 0.9995 vs 0.9989 — opposite of the Day-3 prediction. Likely because skincare highlights/ingredient text are more standardized than makeup.</div>
-      <div class="stat-note" style="margin-top:.5rem"><strong>Ingredient features added nothing measurable</strong>Δ NDCG@5 = −0.00001 vs full. The 15-feature ingredient block is kept because it's a useful safety signal even if it doesn't move the ranker.</div>
-      <div class="stat-note" style="margin-top:.5rem"><strong>No fairness gap by skin tone</strong>All five tones land within 0.0004 NDCG@5. The training distribution is uniform across tones, which is why this holds.</div>
-      <div class="stat-note" style="margin-top:.5rem"><strong>"sensitive" skin uses the "dry" rating column</strong>There aren't enough sensitive-skin reviewers in the Sephora demographic data to give a stable per-product mean, so the feature pipeline proxies sensitive → dry.</div>
+      <h3>Things you should know about</h3>
+      <div class="stat-note"><strong>Skincare recommendations work slightly better than makeup recommendations.</strong>Probably because skincare products have more standardized labels and descriptions. Both score over 99%, so the gap is small — but skincare narrowly wins.</div>
+      <div class="stat-note" style="margin-top:.5rem"><strong>The recommender works equally well across all skin tones.</strong>We checked separately: fair, light, medium, tan, and deep all score within 0.04% of each other.</div>
+      <div class="stat-note" style="margin-top:.5rem"><strong>If you pick "sensitive" skin, we use ratings from dry-skin reviewers.</strong>There aren't enough sensitive-skin reviewers to give stable per-product ratings, and dry skin is the closest comparable group.</div>
+      <div class="stat-note" style="margin-top:.5rem"><strong>Tight budget + multiple sensitivities can leave you with a partial routine.</strong>This happened to 1 out of 160 test users (someone with a $30 budget plus a silicone sensitivity). When it happens, we tell you which step we couldn't fill instead of silently skipping it.</div>
     </div>`;
 
   document.getElementById('stats-modal').style.display = 'flex';
@@ -1317,40 +1045,47 @@ async function generateRoutine() {
 }
 
 function renderRoutine(data) {
-  const { routine, total_cost, budget, within_budget } = data;
+  const { routine, total_cost, budget, within_budget, slot_coverage, dropped_slots, planner_used } = data;
   if (!routine || !routine.length) return 'No products matched your constraints. Try increasing your budget or removing a sensitivity.';
 
-  const maxScore = Math.max(...routine.map(p => p.ml_score));
+  const maxScore = Math.max(...routine.map(p => p.predicted_score));
   const cards = routine.map(p => {
-    const pct = Math.round((p.ml_score / Math.max(maxScore, 0.01)) * 100);
-    const flagKeys = Object.keys(p.safety_flags || {});
+    const pct = Math.round((p.predicted_score / Math.max(maxScore, 0.01)) * 100);
+    const flagKeys = (p.matched_sensitivities || []);
     const safeHtml = flagKeys.length
       ? `<div class="flag-warn">⚠ Contains: ${flagKeys.join(', ')}</div>`
-      : (p.safety_score !== undefined ? `<div class="flag-ok">✓ No flagged ingredients</div>` : '');
+      : `<div class="flag-ok">✓ No flagged ingredients</div>`;
+    const slotTag = (p.slot_type === 'required') ? `${p.category_unified} ★` : p.category_unified;
+    const sourceTag = p.source ? ` · ${p.source}` : '';
     return `<div class="pcard">
-      <div class="step-tag">${p.step}</div>
-      <div class="brand">${p.brand}</div>
-      <div class="pname">${p.name}</div>
-      <div class="price">$${p.price.toFixed(2)}</div>
+      <div class="step-tag">${slotTag}</div>
+      <div class="brand">${p.brand}${sourceTag}</div>
+      <div class="pname">${p.product_name}</div>
+      <div class="price">$${Number(p.price_usd).toFixed(2)}</div>
       <div class="score-row">
         <div class="sbar"><div class="sfill" style="width:${pct}%"></div></div>
         <span class="slabel">${pct}%</span>
       </div>
       ${safeHtml}
-      <button class="swap-btn" onclick="swapStep('${p.step}','${p.id}')">↺ Swap</button>
+      <button class="swap-btn" onclick="swapStep('${p.category_unified}','${p.source_id}')">↺ Swap</button>
     </div>`;
   }).join('');
 
   const budgetColor = within_budget ? 'var(--success)' : 'var(--warn)';
   const budgetIcon  = within_budget ? '✓ Within budget' : '⚠ Over budget';
+  const coverPct    = Math.round((slot_coverage || 0) * 100);
+  const droppedHtml = (dropped_slots && dropped_slots.length)
+    ? `<div style="margin-top:.5rem;padding:.55rem .8rem;background:var(--notice-bg);border:1px solid var(--notice-bd);color:var(--notice-fg);font-size:.78rem;border-radius:8px;">⚠ Dropped slots (infeasibility): ${dropped_slots.join(', ')}</div>`
+    : '';
   return `
-    <p style="margin-bottom:.5rem;font-size:.875rem">Here's your <strong>${data.style}</strong> routine — ${routine.length} products ranked by ${MODEL_INFO[selectedModel].name}:</p>
+    <p style="margin-bottom:.5rem;font-size:.875rem">Here's your <strong>${data.style}</strong> routine — ${routine.length} products picked for you. Ask me anything about it below.</p>
     <div class="routine-grid">${cards}</div>
     <div class="total-bar">
       <span style="color:${budgetColor}">${budgetIcon}</span>
-      <strong>$${total_cost.toFixed(2)} / $${budget}</strong>
+      <strong>$${Number(total_cost).toFixed(2)} / $${budget}</strong>
+      <span style="color:var(--muted);font-size:.78rem">· ${coverPct}% of slots filled</span>
     </div>
-    <p style="margin-top:.6rem;font-size:.78rem;color:var(--muted)">Ranker: ${MODEL_INFO[selectedModel].name} · Day 4 routine planner (MILP + greedy fallback) and Day 5 safety filter will wire into this output next.</p>`;
+    ${droppedHtml}`;
 }
 
 // ── Swap product ────────────────────────────────────────────────────────────
@@ -1367,8 +1102,8 @@ async function swapStep(category, excludeId) {
     if (!alts.length) { updateMsg(lid, 'No alternatives found for this step.'); return; }
     const rows = alts.map(p => `
       <div class="prod-row">
-        <div><div class="pb">${p.brand}</div><div class="pn">${p.name}</div><div class="pc">${p.category}</div></div>
-        <div class="pr"><div class="price">$${p.price.toFixed(2)}</div><div class="stars">★ ${p.rating}</div></div>
+        <div><div class="pb">${p.brand}</div><div class="pn">${p.product_name}</div><div class="pc">${p.category_unified}</div></div>
+        <div class="pr"><div class="price">$${Number(p.price_usd).toFixed(2)}</div><div class="stars">★ ${p.rating ?? '—'}</div></div>
       </div>`).join('');
     updateMsg(lid, `<strong>Alternative ${category} options:</strong><div class="prod-list">${rows}</div>`);
   } catch(e) {
@@ -1411,8 +1146,8 @@ async function sendChat() {
     if (r.action === 'show_products' && r.data?.length) {
       const rows = r.data.map(p => `
         <div class="prod-row">
-          <div><div class="pb">${p.brand}</div><div class="pn">${p.name}</div><div class="pc">${p.category}</div></div>
-          <div class="pr"><div class="price">$${p.price.toFixed(2)}</div><div class="stars">★ ${p.rating}</div></div>
+          <div><div class="pb">${p.brand}</div><div class="pn">${p.product_name}</div><div class="pc">${p.category_unified}</div></div>
+          <div class="pr"><div class="price">$${Number(p.price_usd).toFixed(2)}</div><div class="stars">★ ${p.rating ?? '—'}</div></div>
         </div>`).join('');
       html += `<div class="prod-list" style="margin-top:.5rem">${rows}</div>`;
     }
@@ -1465,15 +1200,22 @@ async function searchProducts() {
       const data   = await res.json();
       if (!data.products?.length) { el.innerHTML = '<p style="color:var(--muted);font-size:.875rem">No products found.</p>'; return; }
       el.innerHTML = `<p style="font-size:.78rem;color:var(--muted);margin-bottom:.75rem">${data.total} results</p>` +
-        data.products.map(p => `
+        data.products.map(p => {
+          const ms = p.matched_sensitivities || [];
+          const flagStr = ms.length ? '⚠ ' + ms.join(', ') : '✓ Clean';
+          const rating  = (p.rating == null) ? '—' : Number(p.rating).toFixed(2);
+          const reviews = (p.num_reviews == null) ? 0 : Number(p.num_reviews);
+          const sourceBadge = p.source ? ` · ${p.source}` : '';
+          return `
           <div class="prod-row">
             <div>
-              <div class="pb">${p.brand}</div>
-              <div class="pn">${p.name}</div>
-              <div class="pc">${p.category} · ${Object.keys(p.safety_flags||{}).length ? '⚠ '+Object.keys(p.safety_flags).join(', ') : '✓ Clean'}</div>
+              <div class="pb">${p.brand}${sourceBadge}</div>
+              <div class="pn">${p.product_name}</div>
+              <div class="pc">${p.category_unified} · ${flagStr}</div>
             </div>
-            <div class="pr"><div class="price">$${p.price.toFixed(2)}</div><div class="stars">★ ${p.rating} (${p.reviews.toLocaleString()})</div></div>
-          </div>`).join('');
+            <div class="pr"><div class="price">$${Number(p.price_usd).toFixed(2)}</div><div class="stars">★ ${rating} (${reviews.toLocaleString()})</div></div>
+          </div>`;
+        }).join('');
     } catch(e) {
       el.innerHTML = '<p style="color:var(--warn);font-size:.875rem">⚠ Server not reachable.</p>';
     }

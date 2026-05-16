@@ -1,70 +1,75 @@
 # Makeup Mastermind
-AI-powered personalized makeup recommendation system.
+AI-powered personalized makeup + skincare routine recommender.
 CS 4701 AI Practicum — Meghana Kesanapalli, Anamitra Rawat, Parvi Chadha
+
+A Flask web app that wires together a trained ranker (gradient boosting), a constraint-based routine planner (MILP), a keyword safety filter, and a Claude-powered natural-language chatbot.
 
 ---
 
-## First Time Setup
+## First-Time Setup
 
-### Step 1 — Make sure you have Python installed
-You need Python 3.10 or higher. If you have Anaconda, you're good.
+### Step 1 — Python 3.10+
+Anaconda or python.org both work.
 
-### Step 2 — Clone or download the project
-If pulling from Git:
-```bash
-git clone <your-repo-url>
-cd makeup-mastermind
-```
-
-### Step 3 — Add the dataset
-Place `sephora_website_dataset.csv` inside the `data/` folder.
-The folder should look like:
-```
-data/
-└── sephora_website_dataset.csv
-```
-
-### Step 4 — Install dependencies
-In your terminal, from inside the `makeup-mastermind` folder run:
+### Step 2 — Install dependencies
+From inside the project folder (the one with `requirements.txt`):
 ```bash
 pip install -r requirements.txt
 ```
 
-### Step 5 — Run setup (only needed once)
-This processes the data and trains the ML model. Takes about 10 seconds.
-```bash
-python setup.py
-```
-You should see it print training stats and a validation RMSE score.
-After this runs, two files get saved automatically:
-- `data/products.json` — cleaned product database
-- `models/ranking_model.pkl` — trained GradientBoosting model
+This installs Flask, pandas, scikit-learn, joblib, **PuLP** (for the MILP planner), the **Anthropic SDK** (for the Claude chatbot), and python-dotenv.
 
-### Step 6 — Start the server
+### Step 3 — Add your Anthropic API key
+The chatbot uses `claude-sonnet-4-6` (configurable). You need an Anthropic API key.
+
+1. Get a key from https://console.anthropic.com/settings/keys
+2. Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env       # macOS/Linux
+   copy .env.example .env     # Windows cmd
+   ```
+3. Open `.env` and paste your real key:
+   ```
+   ANTHROPIC_API_KEY=sk-ant-api03-xxxxxxxxxxxx...
+   ```
+
+`.env` is in `.gitignore` — it will **never** be committed.
+
+### Step 4 — (One-time) Copy the Random Forest model from datamain
+`rf_model.pkl` is 302 MB — over GitHub's 100 MB hard file limit, so it's gitignored. The app runs without it (the Random Forest model card just falls back to Gradient Boosting). To enable the actual RF model locally:
+
+```bash
+copy "..\datamain\data-20260516T051757Z-3-001\data\rf_model.pkl" models\
+```
+
+You only need to do this once per machine. If you skip it, the backend logs `✗ random_forest → NOT FOUND` at startup and silently routes Random Forest requests to Gradient Boosting.
+
+### Step 5 — Start the server
 ```bash
 python -m backend.app
 ```
-Wait until you see:
+
+You'll see startup logs like:
 ```
-Running on http://127.0.0.1:5000
+[startup] catalog: 5085 products, 54 columns
+[startup] flags: 5085 rows
+[startup] loading models...
+  ✓ gradient_boosting  → GradientBoostingRegressor
+  ✓ ridge              → Ridge
+  ✓ random_forest      → RandomForestRegressor    (or ✗ NOT FOUND if you skipped Step 4)
+[startup] ready — open http://127.0.0.1:5000
 ```
 
-### Step 7 — Open the app
-Open your browser and go to:
-```
+### Step 6 — Open the app
 http://127.0.0.1:5000
-```
 
 ---
 
 ## Every Time After That
-
-You only need to do Steps 4–7 once. After that, every time you want to run the app:
-
+Steps 1–4 are one-time. After that, every time you want to run the app:
 ```bash
 python -m backend.app
 ```
-Then go to `http://127.0.0.1:5000` in your browser.
 
 ---
 
@@ -73,73 +78,76 @@ Then go to `http://127.0.0.1:5000` in your browser.
 ```
 makeup-mastermind/
 ├── backend/
-│   ├── __init__.py          ← required, do not delete
-│   ├── app.py               ← Flask server (run this)
-│   ├── data_pipeline.py     ← loads & cleans Sephora CSV
-│   ├── ranking_model.py     ← GradientBoosting ML model
-│   ├── planner.py           ← constraint-based routine optimizer
-│   └── nlp_handler.py       ← NLP chat intent parser
+│   ├── __init__.py
+│   ├── app.py              ← Flask server
+│   ├── routine_planner.py  ← MILP routine planner (imports gb_model.pkl)
+│   ├── safety_filter.py    ← keyword-based ingredient safety filter
+│   └── claude_wrapper.py   ← natural-language chat wrapper (claude-sonnet-4-6)
 ├── frontend/
-│   └── index.html           ← web UI
+│   └── index.html          ← single-page UI
 ├── data/
-│   └── sephora_website_dataset.csv   ← add this yourself
-├── models/                  ← trained model saved here by setup.py
-├── setup.py                 ← run once to process data + train model
+│   ├── merged_products_with_personalization.csv  ← 5,085 products
+│   └── safety_filter_catalog.csv                 ← precomputed sensitivity flags
+├── models/
+│   ├── gb_model.pkl        ← trained Gradient Boosting ranker — 12 MB, in git
+│   ├── ridge_model.pkl     ← trained Ridge baseline           — 1 KB, in git
+│   └── rf_model.pkl        ← trained Random Forest            — 302 MB, NOT in git
+│                              (over GitHub's 100 MB file limit; copy from datamain manually)
+├── .env.example            ← copy to .env and add your API key
+├── .gitignore              ← .env is excluded
 ├── requirements.txt
 └── README.md
 ```
 
 ---
 
-## ML Architecture
+## How the AI components fit together
 
-### Ranking Model (`ranking_model.py`)
-- **Type:** GradientBoostingRegressor (scikit-learn)
-- **Input:** 18-dimensional feature vector per (user, product) pair
-  - Product features: rating, review count, price, finish type (matte/dewy/longwear etc), safety score
-  - User-product cross features: style × step affinity, skin type × finish compatibility, budget fit
-- **Training:** Weak supervision — 20 synthetic user profiles × 600 products = 12,000 labeled pairs
-- **Validation RMSE:** ~0.01
+```
+User survey ─▶ Safety filter (pre-excludes products with flagged ingredients)
+                   │
+                   ▼
+              Trained ranker (Ridge / RF / GBM — scores remaining catalog per user)
+                   │
+                   ▼
+              MILP routine planner (selects one product per slot, ≤ budget)
+                   │
+                   ▼
+              Claude chat wrapper (translates the routine into NL — never invents)
+                   │
+                   ▼
+              Frontend renders cards + chat
+```
 
-### Constraint Planner (`planner.py`)
-- Selects one product per routine step
-- Hard constraints: total cost ≤ budget, flagged ingredients excluded
-- Picks the combination that maximizes ML compatibility scores
-
-### Ingredient Safety (`data_pipeline.py`)
-- Keyword blacklist: fragrance, parabens, sulfates, alcohol, gluten, formaldehyde releasers
-- Each product gets a safety score from 0.0 (many concerns) to 1.0 (clean)
+**Important framing:** Claude does *not* make recommendation decisions. The trained ranker + MILP planner choose the products; Claude only describes them. The system prompt in `claude_wrapper.py` enforces this — Claude is forbidden from referencing any product not in the routine output.
 
 ---
 
-## Adding More Data Later
+## Configuration
 
-### Open Beauty Facts (expands ingredient coverage)
-1. Download the export from openbeautyfacts.org/data
-2. Place it in `data/open_beauty_facts.csv`
-3. Re-run `python setup.py`
-
-### Ulta Dataset
-1. Download from Kaggle and place in `data/ulta_products.csv`
-2. Re-run `python setup.py`
+| Env var | Default | What it does |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | *(required)* | Auth for the Claude chatbot |
+| `CLAUDE_MODEL` | `claude-sonnet-4-6` | Override the Claude model (e.g. `claude-haiku-4-5` for cheaper testing) |
 
 ---
 
 ## Troubleshooting
 
 **`ModuleNotFoundError: No module named 'backend'`**
-Make sure you are running commands from inside the `makeup-mastermind` folder, not from inside `backend/`.
+Run from the project root, not from inside `backend/`.
 
 **`Address already in use`**
-Another process is using port 5000. Run:
-```bash
-lsof -i :5000
-kill -9 <PID>
-```
-Then start the server again.
+Another process is on port 5000. Kill it or change the port in `app.py`.
 
-**App loads but Generate Routine shows an error**
-Make sure you ran `python setup.py` first so the model file exists in `models/`.
+**`FileNotFoundError: Catalog missing`**
+The `data/merged_products_with_personalization.csv` or `models/gb_model.pkl` is missing — copy from `datamain/data-.../data/` if needed.
 
-**Page not found at localhost:5000**
-Use `http://127.0.0.1:5000` instead — they are the same thing.
+**Chat returns "⚠ Claude API error: AuthenticationError"**
+Your `.env` is missing the API key or the key is wrong. Check `.env` exists in the project root and has `ANTHROPIC_API_KEY=sk-ant-...`.
+
+**Page loads but routine generation fails**
+Open browser DevTools → Network tab → click "Generate". Check the `/api/generate-routine` response. If it's a 500, the Flask terminal will show the Python traceback.
+
+**`pulp.PulpSolverError`**
+PuLP couldn't find its bundled CBC solver. Re-install: `pip install --force-reinstall pulp`.
